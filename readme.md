@@ -54,4 +54,3 @@ openssl ca -gencrl \
 ```
 
 ## Signing Certificate Authority
-
