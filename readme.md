@@ -7,14 +7,12 @@ let's start by clarifying a few terms
 * air gapped - the computer is not connected to a network, no WLAN, no LAN,
                 no Bluetooth or any other radio link.
 
-## Air gapped Root CA
-
-lets start with a air gapped Root CA
+## Air gapped Root Certificate Authority
 
 create some folders, change permissions and create some files
 
 ``` terminal
-mkdir -p $HOME/ca/newcerts $HOME/ca/db $HOME/ca/private
+mkdir -p $HOME/ca/newcerts $HOME/ca/db $HOME/ca/private $HOME/ca/crl
 chmod 700 $HOME/ca/private
 
 touch $HOME/ca/db/root-ca.db
@@ -46,3 +44,14 @@ openssl req -config $CADIR/root-ca.conf -new -x509 \
             -keyout $CADIR/private/root-ca.key -out $CADIR/root-ca.crt \
             -extensions root_ca_ext
 ```
+
+at the end we create a certificate revocation list
+
+``` terminal
+openssl ca -gencrl \
+    -config $CADIR/root-ca.conf \
+    -out $CADIR/crl/root-ca.crl
+```
+
+## Signing Certificate Authority
+
