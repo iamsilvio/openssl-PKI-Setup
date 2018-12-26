@@ -112,3 +112,42 @@ openssl ca -gencrl \
     -config $CADIR/signing-ca.conf \
     -out $CADIR/crl/signing-ca.crl
 ```
+
+## Generating Certificate Signing Requests with elliptic keys
+
+With `openssl ecparam -list_curves` you get a list with all available elliptic curves.
+For compatibility reasons we chose a secp384r1.
+
+lets jump to our web server first and generate a key and the Certificate Signing Request
+
+``` terminal
+openssl ecparam -genkey -name secp384r1 | openssl ec -out /etc/ssl/nginx/pki.deleteonerror.com.key
+
+openssl req -new -sha512 \
+            -key /etc/ssl/nginx/pki.deleteonerror.com.key \
+            -out /opt/letsencrypt/pki.deleteonerror.com.csr \
+            -subj "/CN=pki.deleteonerror.com"
+```
+
+or if you need a SAN certificate
+
+``` terminal
+openssl req -new -sha512 \
+            -key /etc/ssl/nginx/pki.deleteonerror.com.key \
+            -subj "/" -reqexts SAN \
+            -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:pki.deleteonerror.com DNS:crl.deleteonerror.com")) \
+            > /opt/letsencrypt/pki.deleteonerror.com.csr
+```
+
+now you have to transport the Request to the Signing-CA and execute
+
+```terminal
+openssl ca \
+    -config $CADIR/signing-ca.conf \
+    -in $CADIR/newcerts/pki.deleteonerror.com.csr\
+    -out $CADIR/newcerts/pki.deleteonerror.com.cst \
+    -extensions server_ext
+```
+
+Grab your certificate and you're done, at least you're close to what's called done.
+You may need to convert your certificate or merge it into a file, depending on where you use the certificate.
